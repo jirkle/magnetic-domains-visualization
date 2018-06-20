@@ -28,10 +28,16 @@ def read_pgm_header(pgmf):
 
 def read_pgm_raster(pgmf, raster):
     raster["rows"] = []
+    raster["min"] = raster["depth"]
+    raster["max"] = 0
     for y in range(raster["height"]):
         row = []
         for x in range(raster["width"]):
             intensity = struct.unpack(">H", pgmf.read(2))[0]
+            if intensity < raster["min"]:
+                raster["min"] = intensity
+            if intensity > raster["max"]:
+                raster["max"] = intensity
             row.append(intensity)
         raster["rows"].append(row)
 

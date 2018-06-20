@@ -51,6 +51,7 @@ class Server(BaseHTTPRequestHandler):
     def _set_headers(self):
         self.send_response(200)
         self.send_header('Content-type', 'application/json')
+        self.send_header('Access-Control-Allow-Origin', '*')
         self.end_headers()
 
     def do_HEAD(self):
@@ -91,9 +92,9 @@ class Server(BaseHTTPRequestHandler):
         metadata = dict()
         metadata["angles"] = []
         metadata["measurements"] = []
-        for key, value in data.items():
+        for key in sorted(data.keys()):
             metadata["angles"].append(key)
-            metadata["measurements"].append(len(value))
+            metadata["measurements"].append(len(data[key]))
         return json.dumps(metadata)
 
     def get_point(self):

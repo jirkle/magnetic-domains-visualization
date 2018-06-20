@@ -1,52 +1,162 @@
-var data = {};
-var imageData;
+//Server
+var server_address = "localhost"
+var server_port = 80
 
-d3.csv("data/-20000_0.pgm.csv", function(d) {
-		return { "intensity": +d["intensity"]	};
-	}, function(d) {
-		data["-20"] = d
-});
-d3.csv("data/-15000_0.pgm.csv", function(d) {
-		return { "intensity": +d["intensity"]	};
-	}, function(d) {
-		data["-15"] = d
-});
-d3.csv("data/-10000_0.pgm.csv", function(d) {
-		return { "intensity": +d["intensity"]	};
-	}, function(d) {
-		data["-10"] = d
-});
-d3.csv("data/-5000_0.pgm.csv", function(d) {
-		return { "intensity": +d["intensity"]	};
-	}, function(d) {
-		data["-5"] = d
-});
-d3.csv("data/0_0.pgm.csv", function(d) {
-		return { "intensity": +d["intensity"]	};
-	}, function(d) {
-		data["0"] = d
-		visualization()
-});
-d3.csv("data/5000_0.pgm.csv", function(d) {
-		return { "intensity": +d["intensity"]	};
-	}, function(d) {
-		data["5"] = d
-});
-d3.csv("data/10000_0.pgm.csv", function(d) {
-		return { "intensity": +d["intensity"]	};
-	}, function(d) {
-		data["10"] = d
-});
-d3.csv("data/15000_0.pgm.csv", function(d) {
-		return { "intensity": +d["intensity"]	};
-	}, function(d) {
-		data["15"] = d
-});
-d3.csv("data/20000_0.pgm.csv", function(d) {
-		return { "intensity": +d["intensity"]	};
-	}, function(d) {
-		data["20"] = d
-});
+//State properties
+var data = {}
+var angle = 0
+var angles = []
+var measurement = 0
+var measurements = []
+var selectedPoint = {"x1": 0, "y1": 0}
+var selectedSquare = {"x1": 0, "y1": 0}
+var pointMode = true
+var image
+var imageData
+var gw = 1000
+var gh = 1000
+
+//Visual & rendering properties
+var chosenSize = 10;
+
+//****************
+// Initialization
+//****************
+
+$.ajax( {url: "http://" + server_address + ":" + server_port + "/metadata", type: "GET", success: function(metadata) {
+	angles = metadata["angles"]
+	measurements = metadata["measurements"]
+    $( document ).ready( function() {
+		init()
+	} );
+}} );
+
+function init() {
+	//init data data structure - create dict & lists of given length
+	image = document.getElementById("image");
+	$.each( angles, function( index, a ) {
+		data[a] = new Array(measurements[index])
+	} )
+
+	//init visual elements - angles & measurements select box, canvas
+	$.each( angles, function( index, a ) {
+		$("#angles").append( $("<option></option>", {value: a, text: a + "°"}) )
+	} )
+	$("#angles").val(angle)
+	refreshMeasurements()
+	d3.select("body")
+		.select("#image")
+		.attr("width", gw)
+		.attr("height", gh)
+	
+	//get data for angle and measurement
+	getAsyncData( angle, measurement ).done(function() {
+		//select middle point
+		imageData = getData( angle, measurement )
+		selectedPoint = {x1: imageData["width"] / 2, y1: imageData["height"] / 2}
+
+		//show data
+		redrawVisualisation( angle, measurement )
+		hideLoader()
+	});
+
+	var imageContext = image.getContext("2d");
+	imageContext.fillStyle = "#000000";
+	imageContext.fillRect(x, y, width, height);
+
+}
+
+function showLoader() {
+	$("#loader").css("display", "block")
+	$("#image").css("display", "none")
+}
+
+function hideLoader() {
+	$("#loader").css("display", "none")
+	$("#image").css("display", "block")
+}
+
+function refreshMeasurements() {
+	$("#measurements").empty()
+	index = angles.indexOf(angle)
+	measurementsCount = measurements[index]
+	for ( var i = 0; i < measurementsCount; i++ ) {
+		$("#measurements").append( $("<option></option>", {value: i, text: (i + 1)}))
+	}
+	$("#measurements").val(measurement)
+}
+
+function computeColors() {
+	min = imageData["min"];
+	max = imageData["max"];
+	color = d3.scale.linear()
+			.domain([min, max])
+			.range(["black", "white"])
+		
+	for (var x = 0; x < imageData["width"]; x++) {
+		for (var y = 0; y < imageData["height"]; y++) {
+			imageData["rows"][y][x] = color(imageData["rows"][y][x]);
+		}
+	}
+}
+
+function getAsyncData(angle, measurement) {
+	var promise = jQuery.Deferred();
+	if ( !data[angle][measurement] ) {
+		$.ajax( {url: "http://" + server_address + ":" + server_port + "/data?a=" + angle + "&n=" + measurement, type: "POST", success: function(d) {
+			data[angle][measurement] = d
+			imageData = d
+			computeColors()
+			promise.resolve( "done" )
+		}} );
+	} else { //We have the data cached => resolve now
+		promise.resolve( "done" )
+	}
+	return promise.promise()
+}
+
+function getData(angle, measurement) {
+	if ( !data[angle][measurement] ) {
+		getAsyncData(angle, measurement)
+		return undefined
+	}
+	return data[angle][measurement]
+}
+
+function redrawVisualisation(angle, measurement) {
+	if ( imageData ) {
+		redrawRect(0, 0, imageData["width"], imageData["height"])
+	}
+
+}
+
+function redrawRect(x, y, width, height) {
+	
+	var imageContext = image.getContext("2d");
+	imageContext.fillStyle = "#000000";
+	imageContext.fillRect(x, y, width, height);
+	
+	if ( pointMode ) {
+		// Draw image
+		for (var localY = y; localY < y + height; localY++) {
+			for (var localX = x; localX < x + width; localX++) {
+				imageContext.fillStyle = imageData["rows"][localY][localX];
+				imageContext.fillRect(localX, localY, 1, 1);
+			}
+		}
+		chosenX = selectedPoint["x1"]
+		chosenY = selectedPoint["y1"]
+		//Draw selection
+		imageContext.fillStyle = "red";
+		imageContext.fillRect(chosenX - chosenSize/2 - 1, chosenY - chosenSize/2 - 1, chosenSize + 2, chosenSize + 2);
+		imageContext.fillStyle = imageData["rows"][chosenY][chosenX];
+		imageContext.fillRect(chosenX - chosenSize/2, chosenY - chosenSize/2, chosenSize, chosenSize);
+	} else {
+
+	}
+}
+
+/*
 
 function visualization() {
 	var chosenStartAngle = 0;
@@ -69,7 +179,7 @@ function visualization() {
 	image = document.getElementById("image");
 
 	google.charts.load('current', {'packages':['corechart']});
-    google.charts.setOnLoadCallback(drawChart);
+	google.charts.setOnLoadCallback(drawChart);
 
 	$( "#slider-range" ).slider({
     	range: true,
@@ -105,18 +215,6 @@ function visualization() {
 		drawChart();
 	});
 
-	/*
-	$(image).on('click', function () {
-		t = parseInt(d3.mouse(this)[0]/ratio);
-		line();
-		colorStates();
-		changeLegend();
-	});
-	
-	image.on("scroll", function(){
-		alert("The paraimage was clicked.");
-	}); */
-
 	function refreshLegend() {
 		$("#from").html(chosenStartAngle);
     	$("#to").html(chosenEndAngle);
@@ -128,24 +226,7 @@ function visualization() {
 		redrawRect(0, 0, gw, gh)
 	}
 	
-	function redrawRect(x, y, width, height) {
-		var imageContext = image.getContext("2d");
-		imageContext.fillStyle = "#000000";
-		imageContext.fillRect(x, y, width, height);
-		// Draw image
-		for (var localY = y; localY <= y + height; localY++) {
-			tmp = 1000 * localY;
-			for (var localX = x; localX < x + width; localX++) {
-				imageContext.fillStyle = imageData[tmp + localX];
-				imageContext.fillRect(localX, localY, 1, 1);
-			}
-		}
-		//Draw selection
-		imageContext.fillStyle = "red";
-		imageContext.fillRect(chosenX - chosenSize/2 - 1, chosenY - chosenSize/2 - 1, chosenSize + 2, chosenSize + 2);
-		imageContext.fillStyle = imageData[chosenY * 1000 + chosenX];
-		imageContext.fillRect(chosenX - chosenSize/2, chosenY - chosenSize/2, chosenSize, chosenSize);
-	}
+	
 
 	function drawChart() {
 		pixel = 1000 * chosenY +  chosenX;
@@ -272,4 +353,5 @@ function visualization() {
 		}
 	}
 }
+*/
 

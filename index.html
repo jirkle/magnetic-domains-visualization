@@ -3,25 +3,37 @@
   <head>
     <meta charset="utf-8">
     <title>Visualisation of magnetic domains</title>
-    <link href="css/main.css" rel="stylesheet">
     <link rel="stylesheet" href="css/jquery-ui.min.css">
-    <script src="js/jquery-3.2.1.min.js"></script>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.1/css/bootstrap.min.css" integrity="sha384-WskhaSGFgHYWDcbwN70/dfYBj47jz9qbsMId/iRN3ewGhXQFZCSftd1LZCfmhktB" crossorigin="anonymous">
+    <link href="css/main.css" rel="stylesheet">
+    <script src="js/jquery-3.3.1.min.js"></script>
     <script src="js/jquery-ui.min.js"></script>
     <script type="text/javascript" src="js/d3.min.js"></script>
     <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js" integrity="sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49" crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.1/js/bootstrap.min.js" integrity="sha384-smHYKdLADwkXOn1EmN1qk/HfnUcbVRZyYmZ4qpPea6sjB/pTJ0euyQp0Mk8ck+5T" crossorigin="anonymous"></script>
   </head>
   <body>
-
-    <div class="block">
-        <div class="graphBox">
-          <canvas id="image">
+    <div class="container wrapper">
+      <div class="row justify-content-center">
+        <div class="graphBox col-8">
+         <div id="loader">
+            <div class="loader"></div>
+          </div>
+          <canvas id="image" css="display: none">
           </canvas>
         </div>
-        <div class="right">
+        <div class="right col-3">
             <h1>Magnetic domains</h1>
+            <div id="chart" style="width: 400px; height: 200px"></div>
             <button id="point-selection">Point</button><button id="region-selection">Region</button>
-            <p>Selected pixel x = <span id="x"></span>, y = <span id="y"></span>.</p>
-            <div id="slider-range"></div>
+            <p id="info">Selected pixel x = <span id="x"></span>, y = <span id="y"></span>.</p>
+            <div>
+              <p>Angle:</p>
+              <select id="angles"></select>
+              <p>Measurement:</p>
+              <select id="measurements"></select>
+            </div>
             <div><span id="from"></span><span class="fill"></span><span id="to"></span></div>
             <p>Combination method:</p>
             <select id="combine-method">
@@ -30,11 +42,9 @@
               <option value="min">Minimum</option>
               <option value="max">Maximum</option>
             </select>
-            <div id="curve_chart" style="width: 400px; height: 400px"></div>
-            </div>
         </div>
+      </div>
     </div>
-
     
 
   </body>

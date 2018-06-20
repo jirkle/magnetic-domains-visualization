@@ -7,7 +7,14 @@ GET /metadata
 
 POST /data?a=0&n=-1
 //Returns JSON for one measurement of given angle (if n=-1, then it returns aggregated measurement)
-{ "data": csv data }
+{
+	"width": width,
+	"height": height,
+	"depth": depth,
+	"min": minimal intensity,
+	"max": maximal intensity,
+	"data": csv data
+}
 
 GET /point?a=0&x1=0&y1=0
 //Returns JSON for all measurements of given point measured with angle a and at coords x1 and y1
