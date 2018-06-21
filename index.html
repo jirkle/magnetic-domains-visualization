@@ -17,10 +17,13 @@
     <div class="container wrapper">
       <div class="row justify-content-center">
         <div class="graphBox col-8">
-         <div id="loader">
+          <canvas id="image" width="1000" height="1000" style="position: absolute; left: 0; top: 0; z-index: 0;"></canvas>
+          <canvas id="overlay" width="1000" height="1000" style="position: absolute; left: 0; top: 0; z-index: 1;"></canvas>
+          <div id="loader" style="z-index: 2;">
             <div class="loader"></div>
           </div>
-          <canvas id="image" css="display: none">
+
+          <canvas id="image-last" css="display: none">
           </canvas>
         </div>
         <div class="right col-3">
@@ -48,5 +51,6 @@
     
 
   </body>
+  <script type="text/javascript" src="js/renderer.js"></script>
   <script type="text/javascript" src="js/visualization.js"></script>
 </html>

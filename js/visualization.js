@@ -9,15 +9,14 @@ var angles = []
 var measurement = 0
 var measurements = []
 var selectedPoint = {"x1": 0, "y1": 0}
-var selectedSquare = {"x1": 0, "y1": 0}
-var pointMode = true
+var selectedSquare = {"x1": 50, "y1": 50, "x2": 100, "y2": 100}
+var pointMode = false
 var image
+var overlay
 var imageData
 var gw = 1000
 var gh = 1000
-
-//Visual & rendering properties
-var chosenSize = 10;
+var hoveredRegion = undefined
 
 //****************
 // Initialization
@@ -34,6 +33,7 @@ $.ajax( {url: "http://" + server_address + ":" + server_port + "/metadata", type
 function init() {
 	//init data data structure - create dict & lists of given length
 	image = document.getElementById("image");
+	overlay = document.getElementById("overlay");
 	$.each( angles, function( index, a ) {
 		data[a] = new Array(measurements[index])
 	} )
@@ -50,30 +50,57 @@ function init() {
 		.attr("height", gh)
 	
 	//get data for angle and measurement
-	getAsyncData( angle, measurement ).done(function() {
+	getAsyncData().done(function() {
 		//select middle point
-		imageData = getData( angle, measurement )
-		selectedPoint = {x1: imageData["width"] / 2, y1: imageData["height"] / 2}
+		imageData = getData()
+		selectedPoint = { "x1": imageData["width"] / 2, "y1": imageData["height"] / 2}
 
 		//show data
-		redrawVisualisation( angle, measurement )
-		hideLoader()
+		//Enter point selection mode
+		enterPointMode()
+		redrawImage()
 	});
 
-	var imageContext = image.getContext("2d");
-	imageContext.fillStyle = "#000000";
-	imageContext.fillRect(x, y, width, height);
+	//Register change listeners
 
+	$("#angles").change( onAngleChanged )
+
+	$("#measurements").change( onMeasurementChanged )
+	
+	$("#point-selection").on( "click", function(e) {
+		enterPointMode()
+	});
+
+	$("#region-selection").on( "click", function(e) {
+		enterRegionMode()
+	});
+}
+
+function onAngleChanged() {
+	angle = parseInt( $( "#angles" ).val() )
+	showLoader()
+	$("#measurements").unbind()
+	refreshMeasurements()
+	$("#measurements").change( onMeasurementChanged )
+	getAsyncData().done( function() {
+		redrawImage()
+	})
+}
+
+function onMeasurementChanged() {
+	measurement = parseInt($("#measurements").val())
+	showLoader()
+	getAsyncData().done( function() {
+		redrawImage()
+	})
 }
 
 function showLoader() {
 	$("#loader").css("display", "block")
-	$("#image").css("display", "none")
 }
 
 function hideLoader() {
 	$("#loader").css("display", "none")
-	$("#image").css("display", "block")
 }
 
 function refreshMeasurements() {
@@ -86,27 +113,17 @@ function refreshMeasurements() {
 	$("#measurements").val(measurement)
 }
 
-function computeColors() {
-	min = imageData["min"];
-	max = imageData["max"];
-	color = d3.scale.linear()
-			.domain([min, max])
-			.range(["black", "white"])
-		
-	for (var x = 0; x < imageData["width"]; x++) {
-		for (var y = 0; y < imageData["height"]; y++) {
-			imageData["rows"][y][x] = color(imageData["rows"][y][x]);
-		}
-	}
-}
-
-function getAsyncData(angle, measurement) {
+function getAsyncData() {
 	var promise = jQuery.Deferred();
 	if ( !data[angle][measurement] ) {
 		$.ajax( {url: "http://" + server_address + ":" + server_port + "/data?a=" + angle + "&n=" + measurement, type: "POST", success: function(d) {
 			data[angle][measurement] = d
 			imageData = d
-			computeColors()
+			min = imageData["min"];
+			max = imageData["max"];
+			imageData["color"] = d3.scale.linear()
+				.domain([min, max])
+				.range(["black", "white"])
 			promise.resolve( "done" )
 		}} );
 	} else { //We have the data cached => resolve now
@@ -115,47 +132,55 @@ function getAsyncData(angle, measurement) {
 	return promise.promise()
 }
 
-function getData(angle, measurement) {
+function getData() {
 	if ( !data[angle][measurement] ) {
-		getAsyncData(angle, measurement)
+		getAsyncData()
 		return undefined
 	}
 	return data[angle][measurement]
 }
 
-function redrawVisualisation(angle, measurement) {
-	if ( imageData ) {
-		redrawRect(0, 0, imageData["width"], imageData["height"])
+function enterPointMode() {
+	if ( !pointMode ) {
+		pointMode = true
+		$(overlay).unbind()
+		$(overlay).on("click", function(e) {
+			lastX = selectedPoint["x1"]
+			lastY = selectedPoint["y1"]
+			chosenX = Math.round(e.originalEvent.offsetX/this.clientWidth * this.width)
+			chosenY = Math.round(e.originalEvent.offsetY/this.clientHeight * this.height)
+			selectedPoint = {"x1": chosenX, "y1": chosenY}
+			dist = Math.round((chosenSize + borderSize) / 2 + 1)
+			appendOverlayRegionToRender( {"x1": chosenX - dist, "y1": chosenY - dist, "x2": chosenX + dist, "y2": chosenY + dist} )
+			appendOverlayRegionToRender( {"x1": lastX - dist, "y1": lastY - dist, "x2": lastX + dist, "y2": lastY + dist} )
+		});
+		redrawOverlay()
 	}
-
 }
 
-function redrawRect(x, y, width, height) {
-	
-	var imageContext = image.getContext("2d");
-	imageContext.fillStyle = "#000000";
-	imageContext.fillRect(x, y, width, height);
-	
+function enterRegionMode() {
 	if ( pointMode ) {
-		// Draw image
-		for (var localY = y; localY < y + height; localY++) {
-			for (var localX = x; localX < x + width; localX++) {
-				imageContext.fillStyle = imageData["rows"][localY][localX];
-				imageContext.fillRect(localX, localY, 1, 1);
-			}
-		}
-		chosenX = selectedPoint["x1"]
-		chosenY = selectedPoint["y1"]
-		//Draw selection
-		imageContext.fillStyle = "red";
-		imageContext.fillRect(chosenX - chosenSize/2 - 1, chosenY - chosenSize/2 - 1, chosenSize + 2, chosenSize + 2);
-		imageContext.fillStyle = imageData["rows"][chosenY][chosenX];
-		imageContext.fillRect(chosenX - chosenSize/2, chosenY - chosenSize/2, chosenSize, chosenSize);
-	} else {
+		pointMode = false
+		$(overlay).unbind()
+		$(overlay).on( "mouseover", function(e) {
+			hoveredX = Math.round(e.originalEvent.offsetX/this.clientWidth * this.width)
+			hoveredY = Math.round(e.originalEvent.offsetY/this.clientHeight * this.height)
 
+			hoveredRegion
+			//change mouse icon appropriatelly
+		} )
+		$(overlay).on( "dragstart", function(e) {
+			//resolve dragged corner / edge / whole region
+		} )
+		$(overlay).on( "drag", function(e) {
+			//redraw region
+		} )
+		$(overlay).on( "dragend", function(e) {
+			//end
+		} )
+		redrawOverlay()
 	}
 }
-
 /*
 
 function visualization() {
