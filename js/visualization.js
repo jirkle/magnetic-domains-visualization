@@ -11,9 +11,9 @@ var measurements = []
 var selectedPoint = {"x1": 0, "y1": 0}
 var selectedSquare = {"x1": 50, "y1": 50, "x2": 100, "y2": 100}
 var pointMode = false
-var image
-var overlay
-var imageData
+var image //Image handler
+var overlay //Image overlay handler
+var imageData //Data for visualization
 var gw = 1000
 var gh = 1000
 var hoveredRegion = undefined
@@ -21,6 +21,8 @@ var hoveredRegion = undefined
 //****************
 // Initialization
 //****************
+
+google.charts.load('current', {'packages':['corechart']})
 
 $.ajax( {url: "http://" + server_address + ":" + server_port + "/metadata", type: "GET", success: function(metadata) {
 	angles = metadata["angles"]
@@ -95,6 +97,16 @@ function onMeasurementChanged() {
 	})
 }
 
+function onSelectionChanged() {
+	if ( pointMode ) {
+		$("#info").html("Selected pixel x = " + selectedPoint["x1"] + ", y = " + selectedPoint["y1"] + ".")
+		drawIntensityChart()
+	} else {
+		$("#info").html("Selected rect x1 = " + selectedSquare["x1"] + ", y1 = " + selectedSquare["y1"] + ", x2 = " + selectedSquare["x2"] + ", y2 = " + selectedSquare["y2"] + ".")
+		drawHistogram()
+	}
+}
+
 function showLoader() {
 	$("#loader").css("display", "block")
 }
@@ -153,7 +165,9 @@ function enterPointMode() {
 			dist = Math.round((chosenSize + borderSize) / 2 + 1)
 			appendOverlayRegionToRender( {"x1": chosenX - dist, "y1": chosenY - dist, "x2": chosenX + dist, "y2": chosenY + dist} )
 			appendOverlayRegionToRender( {"x1": lastX - dist, "y1": lastY - dist, "x2": lastX + dist, "y2": lastY + dist} )
+			onSelectionChanged()
 		});
+		onSelectionChanged()
 		redrawOverlay()
 	}
 }
@@ -166,7 +180,7 @@ function enterRegionMode() {
 			hoveredX = Math.round(e.originalEvent.offsetX/this.clientWidth * this.width)
 			hoveredY = Math.round(e.originalEvent.offsetY/this.clientHeight * this.height)
 
-			hoveredRegion
+			hoveredRegion = "center"
 			//change mouse icon appropriatelly
 		} )
 		$(overlay).on( "dragstart", function(e) {
@@ -174,13 +188,83 @@ function enterRegionMode() {
 		} )
 		$(overlay).on( "drag", function(e) {
 			//redraw region
+			onSelectionChanged()
 		} )
 		$(overlay).on( "dragend", function(e) {
 			//end
+			onSelectionChanged()
 		} )
+		onSelectionChanged()
 		redrawOverlay()
 	}
 }
+
+function drawIntensityChart() {
+	$.ajax( {
+		url: "http://" + server_address + ":" + server_port + "/point?x1=" + (selectedPoint["x1"] + 1) + "&y1=" + (selectedPoint["y1"] + 1),
+		type: "POST",
+		success: function(point) {
+			$('#chart').empty()
+
+			values = []
+			$(point).each( function( index, p ) {
+				val = []
+				val.push(p["a"])
+				intensities = []
+				$( p["measurements"] ).each( function( index, p ) {
+					intensities.push(p["i"])
+				} )
+				intensities.sort()
+				val.push(d3.quantile(intensities, 0))
+				val.push(d3.quantile(intensities, 0.25))
+				val.push(d3.quantile(intensities, 0.75))
+				val.push(d3.quantile(intensities, 1))
+				values.push(val)
+			} )
+
+			var d = google.visualization.arrayToDataTable(values, true);
+
+    		var options = {
+        		title: 'Intensity based on angle',
+    	    	legend: { position: 'bottom' },
+    	    	vAxis: { maxValue: 20000 }
+    		};
+
+    		var chart = new google.visualization.CandlestickChart(document.getElementById('chart'))
+			chart.draw(d, options)
+		}
+	} )
+}
+
+function drawHistogram() {
+	$('#chart').empty()
+	/*
+			values = []
+			point.each( function( index, p ) {
+				val = []
+				val.push(p["a"])
+				p["measurements"].each( function( index, m ) {
+					val.push(int(m["i"]))
+				} )
+				values.push(val)
+			} )
+
+			var d = new google.visualization.DataTable();
+			d.addColumn('number', 'Angle');
+    		d.addColumn('number', 'Intensity');
+	    	d.addRows(values);
+
+    		var options = {
+        		title: 'Intensity based on angle',
+	        	curveType: 'function',
+    	    	legend: { position: 'bottom' }
+    		};
+
+    		var chart = new google.visualization.CandlestickChart(document.getElementById('chart'))
+			chart.draw(d, options)
+	*/
+}
+
 /*
 
 function visualization() {

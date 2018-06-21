@@ -98,30 +98,30 @@ class Server(BaseHTTPRequestHandler):
         return json.dumps(metadata)
 
     def get_point(self):
-        a = self.params["a"]
         x = self.params["x1"]
         y = self.params["y1"]
-        if a is None or x is None or y is None:
+        if x is None or y is None:
             return None
-        if a not in data:
-            return None
-        measurements = data[a]
-        if len(measurements) == 0:
-            return None
+        pointValues = []
+        for a in data.keys():
+            measurements = data[a]
+            if len(measurements) == 0:
+                continue
 
-        if x > measurements[0]["width"] or x <= 0 or y > measurements[0]["height"] or y <= 0:
-            return None
+            if x > measurements[0]["width"] or x <= 0 or y > measurements[0]["height"] or y <= 0:
+                continue
 
-        point = dict()
-        point["a"] = a
-        point["x1"] = x
-        point["y1"] = y
-        point["measurements"] = []
+            point = dict()
+            point["a"] = a
+            point["x1"] = x
+            point["y1"] = y
+            point["measurements"] = []
 
-        for i in range(len(measurements)):
-            measurement = measurements[i]
-            point["measurements"].append({"n": i, "i": measurement["rows"][y][x]})
-        return json.dumps(point)
+            for i in range(len(measurements)):
+                measurement = measurements[i]
+                point["measurements"].append({"n": i, "i": measurement["rows"][y][x]})
+            pointValues.append(point)
+        return json.dumps(pointValues)
 
     def get_data(self):
         a = self.params["a"]
