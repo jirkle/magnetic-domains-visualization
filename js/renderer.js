@@ -78,7 +78,7 @@ function render() {
 function redrawImageRect(x1, y1, x2, y2) {
 	var imageContext = image.getContext("2d");
 	imageContext.fillStyle = "#000000";
-	imageContext.clearRect(x1, y1, x2 - x1, y2 - y1);
+	imageContext.clearRect(x1, y1, x2 - x1 + 1, y2 - y1 + 1)
 	for (var localY = y1; localY <= y2; localY++) {
 		for (var localX = x1; localX <= x2; localX++) {
 			intensity = imageData["rows"][localY][localX]
@@ -92,7 +92,7 @@ function redrawImageRect(x1, y1, x2, y2) {
 function redrawOverlayRect(x1, y1, x2, y2) {
 	var imageContext = overlay.getContext("2d");
 	imageContext.fillStyle = "#ffffffff";
-	imageContext.clearRect(x1, y1, x2 - x1, y2 - y1);
+	imageContext.clearRect(x1, y1, x2 - x1 + 1, y2 - y1 + 1)
 	if ( pointMode ) {
 		// Draw image
 		chosenX = selectedPoint["x1"]
@@ -110,9 +110,9 @@ function redrawOverlayRect(x1, y1, x2, y2) {
 		//Shading
 		drawRect(x1, y1, selectedSquare["x1"] - x1, selectedSquare["y1"] - y1, shadeColor, imageContext) //Region 1
 		drawRect(selectedSquare["x1"], y1, selectedSquare["x2"] - selectedSquare["x1"], selectedSquare["y1"] - y1, shadeColor, imageContext) //Region 2
-		drawRect(selectedSquare["x2"], y1, x2 - selectedSquare["x2"], selectedSquare["y1"] - y1, shadeColor, imageContext) //Region 3
-		drawRect(selectedSquare["x2"], selectedSquare["y1"], x2 - selectedSquare["x2"], selectedSquare["y2"] - selectedSquare["y1"], shadeColor, imageContext) //Region 4
-		drawRect(selectedSquare["x2"], selectedSquare["y2"], x2 - selectedSquare["x2"], y2 - selectedSquare["y2"], shadeColor, imageContext) //Region 5
+		drawRect(selectedSquare["x2"], y1, x2 - selectedSquare["x2"] + 1, selectedSquare["y1"] - y1, shadeColor, imageContext) //Region 3
+		drawRect(selectedSquare["x2"], selectedSquare["y1"], x2 - selectedSquare["x2"] + 1, selectedSquare["y2"] - selectedSquare["y1"], shadeColor, imageContext) //Region 4
+		drawRect(selectedSquare["x2"], selectedSquare["y2"], x2 - selectedSquare["x2"] + 1, y2 - selectedSquare["y2"], shadeColor, imageContext) //Region 5
 		drawRect(selectedSquare["x1"], selectedSquare["y2"], selectedSquare["x2"] - selectedSquare["x1"], y2 - selectedSquare["y2"], shadeColor, imageContext) //Region 6
 		drawRect(x1, selectedSquare["y2"], selectedSquare["x1"] - x1, y2 - selectedSquare["y2"], shadeColor, imageContext) //Region 7
 		drawRect(x1, selectedSquare["y1"], selectedSquare["x1"] - x1, selectedSquare["y2"] - selectedSquare["y1"], shadeColor, imageContext) //Region 8
