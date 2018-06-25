@@ -108,7 +108,7 @@ class Server(BaseHTTPRequestHandler):
             if len(measurements) == 0:
                 continue
 
-            if x > measurements[0]["width"] or x <= 0 or y > measurements[0]["height"] or y <= 0:
+            if x >= measurements[0]["width"] or x < 0 or y >= measurements[0]["height"] or y < 0:
                 continue
 
             point = dict()

@@ -7,7 +7,6 @@
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.1/css/bootstrap.min.css" integrity="sha384-WskhaSGFgHYWDcbwN70/dfYBj47jz9qbsMId/iRN3ewGhXQFZCSftd1LZCfmhktB" crossorigin="anonymous">
     <link href="css/main.css" rel="stylesheet">
     <script src="js/jquery-3.3.1.min.js"></script>
-    <script src="js/jquery-ui.min.js"></script>
     <script type="text/javascript" src="js/d3.min.js"></script>
     <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js" integrity="sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49" crossorigin="anonymous"></script>
@@ -29,12 +28,15 @@
         <div class="right col-3">
             <h1>Magnetic domains</h1>
             <div id="chart" style="width: 400px; height: 300px"></div>
-            <button id="point-selection">Point</button><button id="region-selection">Region</button>
+            <div id="buttons">
+              <button id="point-selection">Point</button>
+              <button id="region-selection">Region</button>
+            </div>
             <p id="info">Selected pixel x = <span id="x"></span>, y = <span id="y"></span>.</p>
             <div>
-              <p>Angle:</p>
+              <p><strong>Angle:</strong></p>
               <select id="angles"></select>
-              <p>Measurement:</p>
+              <p><strong>Measurement:</strong></p>
               <select id="measurements"></select>
             </div>
         </div>

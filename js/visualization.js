@@ -8,8 +8,8 @@ var angle = 0
 var angles = []
 var measurement = 0
 var measurements = []
-var selectedPoint = {"x1": 0, "y1": 0}
-var selectedSquare = {"x1": 50, "y1": 50, "x2": 200, "y2": 200}
+var selectedPoint = { "x1": 500, "y1": 500 }
+var selectedSquare = { "x1": 450, "y1": 450, "x2": 550, "y2": 550 }
 var pointMode = false
 var image //Image handler
 var overlay //Image overlay handler
@@ -18,6 +18,7 @@ var gw = 1000
 var gh = 1000
 var action = undefined
 var dragStarted = false
+var dragPos = { "x1": 0, "y1": 0 }
 var cursorStyle = document.body.style.cursor
 
 //Visual & rendering properties
@@ -113,10 +114,10 @@ function onMeasurementChanged() {
 function onSelectionChanged() {
 	if ( pointMode ) {
 		$("#info").html("Selected pixel x = " + selectedPoint["x1"] + ", y = " + selectedPoint["y1"] + ".")
-		drawIntensityChart()
+		redrawIntensityChart()
 	} else {
 		$("#info").html("Selected rect x1 = " + selectedSquare["x1"] + ", y1 = " + selectedSquare["y1"] + ", x2 = " + selectedSquare["x2"] + ", y2 = " + selectedSquare["y2"] + ".")
-		drawHistogram()
+		redrawHistogram()
 	}
 }
 
@@ -174,14 +175,19 @@ function enterPointMode() {
 			lastY = selectedPoint["y1"]
 			chosenX = Math.round(e.originalEvent.offsetX/this.clientWidth * this.width)
 			chosenY = Math.round(e.originalEvent.offsetY/this.clientHeight * this.height)
+			if(chosenX < 0) { chosenX = 0 }
+			if(chosenX >= imageData["width"]) { chosenX = imageData["width"] - 1 }
+			if(chosenY < 0) { chosenY = 0 }
+			if(chosenY >= imageData["height"]) { chosenY = imageData["height"] - 1 }
 			selectedPoint = {"x1": chosenX, "y1": chosenY}
+
 			dist = Math.round((chosenSize + borderSize) / 2 + 1)
-			appendOverlayRegionToRender( {"x1": chosenX - dist, "y1": chosenY - dist, "x2": chosenX + dist, "y2": chosenY + dist} )
-			appendOverlayRegionToRender( {"x1": lastX - dist, "y1": lastY - dist, "x2": lastX + dist, "y2": lastY + dist} )
+			appendRenderJob( { "x1": chosenX - dist, "y1": chosenY - dist, "x2": chosenX + dist, "y2": chosenY + dist, "function": redrawOverlayRect } )
+			appendRenderJob( {"x1": lastX - dist, "y1": lastY - dist, "x2": lastX + dist, "y2": lastY + dist, "function": redrawOverlayRect} )
 			onSelectionChanged()
 		});
-		onSelectionChanged()
 		redrawOverlay()
+		onSelectionChanged()
 	}
 }
 
@@ -189,108 +195,153 @@ function enterRegionMode() {
 	if ( pointMode ) {
 		pointMode = false
 		$(overlay).unbind()
-		$(overlay).on( "mousemove", function(e) {
-			e.preventDefault()
+		$(document).mousemove(function(e) {
 			if ( !dragStarted ) {
-				hoveredX = Math.round(e.originalEvent.offsetX/this.clientWidth * this.width)
-				hoveredY = Math.round(e.originalEvent.offsetY/this.clientHeight * this.height)
-				action = "move"
-				width = selectedSquare["x2"] - selectedSquare["x1"]
-				height = selectedSquare["y2"] - selectedSquare["y1"]
-				actionRadius = Math.min(width/2, height/2, cornerActionRadius)
-				//Top edge
-				region = {"x1": selectedSquare["x1"], "x2": selectedSquare["x2"], "y1": selectedSquare["y1"] - actionRadius, "y2": selectedSquare["y1"] + actionRadius }
-				if( isInRegion(region, hoveredX, hoveredY) ) {
-					action = "top"
+				if( $(event.target).is("#overlay") ) {
+					overlay = $("#overlay")[0]
+					hoveredX = Math.round(e.offsetX/overlay.clientWidth * overlay.width)
+					hoveredY = Math.round(e.offsetY/overlay.clientHeight * overlay.height)
+					action = "move"
+					width = selectedSquare["x2"] - selectedSquare["x1"]
+					height = selectedSquare["y2"] - selectedSquare["y1"]
+					actionRadius = Math.min(width/2, height/2, cornerActionRadius)
+					//Top edge
+					region = {"x1": selectedSquare["x1"], "x2": selectedSquare["x2"], "y1": selectedSquare["y1"] - actionRadius, "y2": selectedSquare["y1"] + actionRadius }
+					if( isInRegion(region, hoveredX, hoveredY) ) {
+						action = "top"
+					}
+					//Bottom edge
+					region = {"x1": selectedSquare["x1"], "x2": selectedSquare["x2"], "y1": selectedSquare["y2"] - actionRadius, "y2": selectedSquare["y2"] + actionRadius }
+					if( isInRegion(region, hoveredX, hoveredY) ) {
+						action = "bottom"
+					}
+					//Left edge
+					region = {"x1": selectedSquare["x1"] - actionRadius, "x2": selectedSquare["x1"] + actionRadius, "y1": selectedSquare["y1"], "y2": selectedSquare["y2"] }
+					if( isInRegion(region, hoveredX, hoveredY) ) {
+						action = "left"
+					}
+					//Right edge
+					region = {"x1": selectedSquare["x2"] - actionRadius, "x2": selectedSquare["x2"] + actionRadius, "y1": selectedSquare["y1"], "y2": selectedSquare["y2"] }
+					if( isInRegion(region, hoveredX, hoveredY) ) {
+						action = "right"
+					}
+					//Left top corner
+					region = {"x1": selectedSquare["x1"] - actionRadius, "x2": selectedSquare["x1"] + actionRadius, "y1": selectedSquare["y1"] - actionRadius, "y2": selectedSquare["y1"] + actionRadius }
+					if( isInRegion(region, hoveredX, hoveredY) ) {
+						action = "lefttop"
+					}
+					//Right top corner
+					region = {"x1": selectedSquare["x2"] - actionRadius, "x2": selectedSquare["x2"] + actionRadius, "y1": selectedSquare["y1"] - actionRadius, "y2": selectedSquare["y1"] + actionRadius }
+					if( isInRegion(region, hoveredX, hoveredY) ) {
+						action = "righttop"
+					}
+					//Left bottom corner
+					region = {"x1": selectedSquare["x1"] - actionRadius, "x2": selectedSquare["x1"] + actionRadius, "y1": selectedSquare["y2"] - actionRadius, "y2": selectedSquare["y2"] + actionRadius }
+					if( isInRegion(region, hoveredX, hoveredY) ) {
+						action = "leftbottom"
+					}
+					//Right bottom corner
+					region = {"x1": selectedSquare["x2"] - actionRadius, "x2": selectedSquare["x2"] + actionRadius, "y1": selectedSquare["y2"] - actionRadius, "y2": selectedSquare["y2"] + actionRadius }
+					if( isInRegion(region, hoveredX, hoveredY) ) {
+						action = "rightbottom"
+					}
+					switch ( action ) {
+						case "move":
+							overlay.style.cursor = "move"
+							break
+						case "top":
+						case "bottom":
+							overlay.style.cursor = "ns-resize"
+							break
+						case "left":
+						case "right":
+							overlay.style.cursor = "ew-resize"
+							break
+						case "lefttop":
+						case "rightbottom":
+							overlay.style.cursor = "nwse-resize"
+							break
+						case "righttop":
+						case "leftbottom":
+							overlay.style.cursor = "nesw-resize"
+							break
+					}
 				}
-				//Bottom edge
-				region = {"x1": selectedSquare["x1"], "x2": selectedSquare["x2"], "y1": selectedSquare["y2"] - actionRadius, "y2": selectedSquare["y2"] + actionRadius }
-				if( isInRegion(region, hoveredX, hoveredY) ) {
-					action = "bottom"
-				}
-				//Left edge
-				region = {"x1": selectedSquare["x1"] - actionRadius, "x2": selectedSquare["x1"] + actionRadius, "y1": selectedSquare["y1"], "y2": selectedSquare["y2"] }
-				if( isInRegion(region, hoveredX, hoveredY) ) {
-					action = "left"
-				}
-				//Right edge
-				region = {"x1": selectedSquare["x2"] - actionRadius, "x2": selectedSquare["x2"] + actionRadius, "y1": selectedSquare["y1"], "y2": selectedSquare["y2"] }
-				if( isInRegion(region, hoveredX, hoveredY) ) {
-					action = "right"
-				}
-				//Left top corner
-				region = {"x1": selectedSquare["x1"] - actionRadius, "x2": selectedSquare["x1"] + actionRadius, "y1": selectedSquare["y1"] - actionRadius, "y2": selectedSquare["y1"] + actionRadius }
-				if( isInRegion(region, hoveredX, hoveredY) ) {
-					action = "lefttop"
-				}
-				//Right top corner
-				region = {"x1": selectedSquare["x2"] - actionRadius, "x2": selectedSquare["x2"] + actionRadius, "y1": selectedSquare["y1"] - actionRadius, "y2": selectedSquare["y1"] + actionRadius }
-				if( isInRegion(region, hoveredX, hoveredY) ) {
-					action = "righttop"
-				}
-				//Left bottom corner
-				region = {"x1": selectedSquare["x1"] - actionRadius, "x2": selectedSquare["x1"] + actionRadius, "y1": selectedSquare["y2"] - actionRadius, "y2": selectedSquare["y2"] + actionRadius }
-				if( isInRegion(region, hoveredX, hoveredY) ) {
-					action = "leftbottom"
-				}
-				//Right bottom corner
-				region = {"x1": selectedSquare["x2"] - actionRadius, "x2": selectedSquare["x2"] + actionRadius, "y1": selectedSquare["y2"] - actionRadius, "y2": selectedSquare["y2"] + actionRadius }
-				if( isInRegion(region, hoveredX, hoveredY) ) {
-					action = "rightbottom"
-				}
+			} else {
+				e.preventDefault()
+				e.stopPropagation()
+				delta = { "x1": e.pageX - dragPos["x1"], "y1": e.pageY - dragPos["y1"] }
+				dragPos = { "x1": e.pageX, "y1": e.pageY }
 				switch ( action ) {
 					case "move":
-						document.body.style.cursor = "move"
+						correctDelta( delta, { "x1": selectedSquare["x1"], "y1": selectedSquare["y1"] } )
+						correctDelta( delta, { "x1": selectedSquare["x2"], "y1": selectedSquare["y2"] } )
+						selectedSquare["x1"] += delta["x1"]
+						selectedSquare["x2"] += delta["x1"]
+						selectedSquare["y1"] += delta["y1"]
+						selectedSquare["y2"] += delta["y1"]
 						break
 					case "top":
+						correctDelta( delta, { "x1": 0, "y1": selectedSquare["y1"] } )
+						selectedSquare["y1"] += delta["y1"]
+						break
 					case "bottom":
-						document.body.style.cursor = "ns-resize"
+						correctDelta( delta, { "x1": 0, "y1": selectedSquare["y2"] } )
+						selectedSquare["y2"] += delta["y1"]
 						break
 					case "left":
+						correctDelta( delta, { "x1": selectedSquare["x1"], "y1": 0 } )
+						selectedSquare["x1"] += delta["x1"]
+						break
 					case "right":
-						document.body.style.cursor = "ew-resize"
+						correctDelta( delta, { "x1": selectedSquare["x2"], "y1": 0 } )
+						selectedSquare["x2"] += delta["x1"]
 						break
 					case "lefttop":
+						correctDelta( delta, { "x1": selectedSquare["x1"], "y1": selectedSquare["y1"] } )
+						selectedSquare["x1"] += delta["x1"]
+						selectedSquare["y1"] += delta["y1"]
+						break
 					case "rightbottom":
-						document.body.style.cursor = "nwse-resize"
+						correctDelta( delta, { "x1": selectedSquare["x2"], "y1": selectedSquare["y2"] } )
+						selectedSquare["x2"] += delta["x1"]
+						selectedSquare["y2"] += delta["y1"]
 						break
 					case "righttop":
+						correctDelta( delta, { "x1": selectedSquare["x2"], "y1": selectedSquare["y1"] } )
+						selectedSquare["x2"] += delta["x1"]
+						selectedSquare["y1"] += delta["y1"]
+						break
 					case "leftbottom":
-						document.body.style.cursor = "nesw-resize"
+						correctDelta( delta, { "x1": selectedSquare["x1"], "y1": selectedSquare["y2"] } )
+						selectedSquare["x1"] += delta["x1"]
+						selectedSquare["y2"] += delta["y1"]
 						break
 				}
-				
+				//redraw region
+				redrawOverlay()
+				onSelectionChanged()
 			}
-			//change mouse icon appropriatelly
 		} )
-		
-		$(overlay).on( "onmouseenter", function(e) {
-			cursorStyle = document.style.cursor
-			//resolve dragged corner / edge / whole region
-		} )	
-
-		$(overlay).on( "onmouseout", function(e) {
-			document.body.style.cursor = cursorStyle
-			//resolve dragged corner / edge / whole region
-		} )	
 			
-		$(overlay).on( "dragstart", function(e) {
+		$(overlay).mousedown(function(e) {
+			e.preventDefault()
+			e.stopPropagation()
 			dragStarted = true
+			dragPos = { "x1": e.pageX, "y1": e.pageY }
 			//resolve dragged corner / edge / whole region
 		} )
-		$(overlay).on( "drag", function(e) {
-			//redraw region
-			onSelectionChanged()
-			redrawOverlay()
-		} )
-		$(overlay).on( "dragend", function(e) {
+		$(document).mouseup( function(e) {
 			//end
-			dragStarted = false
-			onSelectionChanged()
-			redrawOverlay()
+			if(dragStarted) {
+				dragStarted = false
+
+				redrawOverlay()
+				onSelectionChanged()
+			}			
 		} )
-		onSelectionChanged()
 		redrawOverlay()
+		onSelectionChanged()
 	}
 }
 
@@ -298,59 +349,16 @@ function isInRegion(square, x, y) {
 	return x >= square["x1"] && x <= square["x2"] && y >= square["y1"] && y <= square["y2"]
 }
 
-function drawIntensityChart() {
-	$.ajax( {
-		url: "http://" + server_address + ":" + server_port + "/point?x1=" + (selectedPoint["x1"] + 1) + "&y1=" + (selectedPoint["y1"] + 1),
-		type: "POST",
-		success: function(point) {
-			$('#chart').empty()
-
-			values = []
-			$(point).each( function( index, p ) {
-				val = []
-				val.push(p["a"])
-				intensities = []
-				$( p["measurements"] ).each( function( index, p ) {
-					intensities.push(p["i"])
-				} )
-				intensities.sort()
-				val.push(d3.quantile(intensities, 0))
-				val.push(d3.quantile(intensities, 0.25))
-				val.push(d3.quantile(intensities, 0.75))
-				val.push(d3.quantile(intensities, 1))
-				values.push(val)
-			} )
-
-			var d = google.visualization.arrayToDataTable(values, true);
-
-    		var options = {
-        		title: 'Intensity based on angle',
-    	    	legend: { position: 'bottom' },
-    	    	vAxis: { maxValue: 20000 }
-    		};
-
-    		var chart = new google.visualization.CandlestickChart(document.getElementById('chart'))
-			chart.draw(d, options)
-		}
-	} )
-}
-
-function drawHistogram() {
-	$('#chart').empty()
-	values = [['Intensity']]
-	d = imageData["rows"]
-	for (var x = selectedSquare["x1"]; x <= selectedSquare["x2"]; x++) {
-		for (var y = selectedSquare["y1"]; y <= selectedSquare["y2"]; y++) {
-			values.push([parseInt(d[y][x])])
-		}
+function correctDelta(delta, point) {
+	if ( point["x1"] + delta["x1"] < 0 ) {
+		delta["x1"] = - point["x1"]
+	} else if ( point["x1"] + delta["x1"] >= imageData["width"] ) {
+		delta["x1"] = imageData["width"] - point["x1"] - 1
 	}
-
-	var d = google.visualization.arrayToDataTable(values);
-	var options = {
-        title: 'Intensity histogram',
-    	legend: { position: 'bottom' }
-    };
-
-	var chart = new google.visualization.Histogram(document.getElementById('chart'));
-    chart.draw(d, options);
+	if ( point["y1"] + delta["y1"] < 0 ) {
+		delta["y1"] = - point["y1"]
+	} else if ( point["y1"] + delta["y1"] >= imageData["height"] ) {
+		delta["y1"] = imageData["height"] - point["y1"] - 1
+	}
+	return delta
 }

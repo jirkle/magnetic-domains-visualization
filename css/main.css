@@ -48,9 +48,23 @@ p{
 	width: 100%;
 		
 }
-.graph{
-	margin:0px 20px 0px 5px;
+
+#chart{
+	margin: 10px 0px 10px 0px;
 }
+
+#buttons{
+	margin: 10px 0px 10px 0px;
+}
+
+#info{
+	margin: 10px 0px 10px 0px;
+}
+
+#angles{
+	margin: 0px 0px 20px 0px;
+}
+
 
 .right{
 	float:left;

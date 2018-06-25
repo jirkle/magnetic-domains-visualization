@@ -1,7 +1,7 @@
 Endpoints:
 GET /metadata
 {
-	"angles": [-20],
+	"angles": [-20, -15, ...],
 	"measurements": [count]
 }
 
@@ -13,29 +13,19 @@ POST /data?a=0&n=-1
 	"depth": depth,
 	"min": minimal intensity,
 	"max": maximal intensity,
-	"data": csv data
+	"rows": rows lists of intensities
 }
 
-GET /point?a=0&x1=0&y1=0
-//Returns JSON for all measurements of given point measured with angle a and at coords x1 and y1
-{
-	"x1": x1,
-	"y1": y1,
-	"a": angle,
-	"measurements": [
-		{ "n": 0, "i": intensity },
-		{ "n": 1, "i": intensity }, ...
-	]
-}
-
-//Overfunctionality
-GET /lines?a=0&n=-1
-//Returns JSON for lines founded in measurement of given angle (if n=-1, then it returns lines for aggregated measurement)
-{
-	"lines": [
-		{"x1": x1, "y1": y1, "x2": x2, "y2": y2},
-		{"x1": x1, "y1": y1, "x2": x2, "y2": y2},
-		{"x1": x1, "y1": y1, "x2": x2, "y2": y2},
-		...	
-	]
-}
+GET /point?x1=0&y1=0
+//Returns JSON for all measurements of given point at coords x1 and y1
+[
+	{
+		"x1": x1,
+		"y1": y1,
+		"a": angle,
+		"measurements": [
+			{ "n": 0, "i": intensity },
+			{ "n": 1, "i": intensity }, ...
+		]
+	}, ...
+]

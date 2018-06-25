@@ -1,11 +1,8 @@
 var renderTimerId
+var renderGraphId
 var rerenderRegions = []
-var rerenderInterval = 5
-
-//Visual & rendering properties
-var chosenSize = 10;
-var borderSize = 1;
-var shadeColor = "#00000088"
+var rerenderGraph = undefined
+var rerenderInterval = 10
 
 // ##########
 // Interface:
@@ -14,7 +11,7 @@ var shadeColor = "#00000088"
 function redrawImage() {
 	imageData = getData()
 	if ( imageData ) {
-		appendImageRegionToRender( {"x1": 0, "y1": 0, "x2": imageData["width"] - 1, "y2": imageData["height"] - 1})
+		appendImageRegionToRender( {"x1": 0, "y1": 0, "x2": imageData["width"] - 1, "y2": imageData["height"] - 1, "function": redrawImageRect})
 	}
 }
 
@@ -22,13 +19,40 @@ function redrawImage() {
 function redrawOverlay() {
 	imageData = getData()
 	if ( imageData ) {
-		appendOverlayRegionToRender( {"x1": 0, "y1": 0, "x2": imageData["width"] - 1, "y2": imageData["height"] - 1})
+		redrawOverlayRect( 0, 0, imageData["width"] - 1, imageData["height"] - 1)
+	}
+}
+
+// Redraws histogram
+function redrawHistogram() {
+	imageData = getData()
+	if ( imageData ) {
+		rerenderGraph = {"x1": selectedSquare["x1"], "y1": selectedSquare["y1"], "x2": selectedSquare["x2"], "y2": selectedSquare["y2"], "function": drawHistogram}
+		if ( renderGraphId ) {
+			clearInterval(renderGraphId);
+			renderGraphId = setInterval( renderGraph, rerenderInterval )
+		} else {
+			renderGraphId = setInterval( renderGraph, rerenderInterval )
+		}
+	}
+}
+
+// Redraws intensity chart
+function redrawIntensityChart() {
+	imageData = getData()
+	if ( imageData ) {
+		rerenderGraph = {"x1": selectedPoint["x1"], "y1": selectedPoint["y1"], "x2": 0, "y2": 0, "function": drawIntensityChart}
+		if ( renderGraphId ) {
+			clearInterval(renderGraphId);
+			renderGraphId = setInterval( renderGraph, rerenderInterval )
+		} else {			
+			renderGraphId = setInterval( renderGraph, rerenderInterval )
+		}		
 	}
 }
 
 // Appends region which should be rerendered in image layer to list of dirty regions and starts the renderer if necessary
 function appendImageRegionToRender(region) {
-	region["function"] = redrawImageRect
 	if(region["x2"] - region["x1"] > 100 || region["y2"] - region["y1"] > 100) {
 		width = region["x2"] - region["x1"]
 		height = region["y2"] - region["y1"]
@@ -52,8 +76,7 @@ function appendImageRegionToRender(region) {
 }
 
 // Appends region which should be rerendered in overlay layer to list of dirty regions and starts the renderer if necessary
-function appendOverlayRegionToRender(region) {
-	region["function"] = redrawOverlayRect
+function appendRenderJob(region) {
 	rerenderRegions.push(region)
 	if ( !renderTimerId ) {
 		renderTimerId = setInterval( render, rerenderInterval )
@@ -73,6 +96,15 @@ function render() {
 		renderTimerId = undefined
 		hideLoader()
 	}	
+}
+
+function renderGraph() {
+	if( rerenderGraph ) {
+		graph = rerenderGraph
+		rerenderGraph = undefined
+		graph["function"](graph["x1"], graph["y1"], graph["x2"], graph["y2"])
+		clearInterval(renderGraphId)
+	}
 }
 
 function redrawImageRect(x1, y1, x2, y2) {
@@ -124,6 +156,101 @@ function drawRect(x, y, width, height, color, imageContext) {
 		imageContext.fillStyle = color;
 		imageContext.fillRect(x, y, width, height);
 	}
+}
+
+function drawHistogram(x1, y1, x2, y2) {
+	$('#chart').empty()
+	values = [['Intensity']]
+	d = imageData["rows"]
+	for (var x = x1; x <= x2; x++) {
+		for (var y = y1; y <= y2; y++) {
+			values.push([parseInt(d[y][x])])
+		}
+	}
+
+	var d = google.visualization.arrayToDataTable(values);
+	var options = {
+        title: 'Intensity histogram',
+        titleTextStyle: {color: '#FFF'},
+    	legend: { position: 'bottom' },
+    	backgroundColor: { fill: "#3e4147" },
+    	colors: ['#e0440e'],
+    	hAxis: {
+    		textStyle:{color: '#FFF'},
+    		gridlines: {
+        		color: "#555"
+    		},
+    		baselineColor: '#FFF'
+    	},
+    	vAxis: {
+    		textStyle:{color: '#FFF'},
+    		gridlines: {
+        		color: "#555"
+    		},
+    		baselineColor: '#FFF'
+    	},
+    	histogram: {
+    		minValue: imageData["min"],
+      		maxValue: imageData["max"]
+      	}
+    };
+
+	var chart = new google.visualization.Histogram(document.getElementById('chart'));
+    chart.draw(d, options);
+}
+
+function drawIntensityChart(x1, y1, x2, y2) {
+	$.ajax( {
+		url: "http://" + server_address + ":" + server_port + "/point?x1=" + x1 + "&y1=" + y1,
+		type: "POST",
+		success: function(point) {
+			$('#chart').empty()
+
+			values = []
+			$(point).each( function( index, p ) {
+				val = []
+				val.push(p["a"])
+				intensities = []
+				$( p["measurements"] ).each( function( index, p ) {
+					intensities.push(p["i"])
+				} )
+				intensities.sort()
+				val.push(d3.quantile(intensities, 0))
+				val.push(d3.quantile(intensities, 0.25))
+				val.push(d3.quantile(intensities, 0.75))
+				val.push(d3.quantile(intensities, 1))
+				values.push(val)
+			} )
+
+			var d = google.visualization.arrayToDataTable(values, true);
+
+    		var options = {
+        		title: 'Intensity based on angle',
+        		titleTextStyle: {color: '#FFF'},
+    	    	legend: { position: 'bottom' },
+    	    	backgroundColor: { fill: "#3e4147" },
+    	    	colors: ['#e0440e'],
+    	    	hAxis: {
+    	    		textStyle:{color: '#FFF'},
+    				gridlines: {
+      		  			color: "#555"
+    				},
+	    			baselineColor: '#ffffff'
+    			},
+		    	vAxis: {
+		    		textStyle:{color: '#FFF'},
+		    		maxValue: 20000,
+    				gridlines: {
+        				color: "#555"
+		    		},
+    				baselineColor: '#ffffff'
+		    	}
+    		};
+
+    		var chart = new google.visualization.CandlestickChart(document.getElementById('chart'))
+			chart.draw(d, options)
+		}
+	} )
 }
 
 function shuffle(array) {
