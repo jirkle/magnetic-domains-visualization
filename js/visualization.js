@@ -206,44 +206,44 @@ function enterRegionMode() {
 					action = "move"
 					width = selectedSquare["x2"] - selectedSquare["x1"]
 					height = selectedSquare["y2"] - selectedSquare["y1"]
-					actionRadius = Math.min(width/2, height/2, cornerActionRadius)
+					innerActionRadius = Math.min(width/2, height/2, cornerActionRadius)
 					//Top edge
-					region = {"x1": selectedSquare["x1"], "x2": selectedSquare["x2"], "y1": selectedSquare["y1"] - actionRadius, "y2": selectedSquare["y1"] + actionRadius }
+					region = {"x1": selectedSquare["x1"], "x2": selectedSquare["x2"], "y1": selectedSquare["y1"] - innerActionRadius, "y2": selectedSquare["y1"] + innerActionRadius }
 					if( isInRegion(region, hoveredX, hoveredY) ) {
 						action = "top"
 					}
 					//Bottom edge
-					region = {"x1": selectedSquare["x1"], "x2": selectedSquare["x2"], "y1": selectedSquare["y2"] - actionRadius, "y2": selectedSquare["y2"] + actionRadius }
+					region = {"x1": selectedSquare["x1"], "x2": selectedSquare["x2"], "y1": selectedSquare["y2"] - innerActionRadius, "y2": selectedSquare["y2"] + innerActionRadius }
 					if( isInRegion(region, hoveredX, hoveredY) ) {
 						action = "bottom"
 					}
 					//Left edge
-					region = {"x1": selectedSquare["x1"] - actionRadius, "x2": selectedSquare["x1"] + actionRadius, "y1": selectedSquare["y1"], "y2": selectedSquare["y2"] }
+					region = {"x1": selectedSquare["x1"] - innerActionRadius, "x2": selectedSquare["x1"] + innerActionRadius, "y1": selectedSquare["y1"], "y2": selectedSquare["y2"] }
 					if( isInRegion(region, hoveredX, hoveredY) ) {
 						action = "left"
 					}
 					//Right edge
-					region = {"x1": selectedSquare["x2"] - actionRadius, "x2": selectedSquare["x2"] + actionRadius, "y1": selectedSquare["y1"], "y2": selectedSquare["y2"] }
+					region = {"x1": selectedSquare["x2"] - innerActionRadius, "x2": selectedSquare["x2"] + innerActionRadius, "y1": selectedSquare["y1"], "y2": selectedSquare["y2"] }
 					if( isInRegion(region, hoveredX, hoveredY) ) {
 						action = "right"
 					}
 					//Left top corner
-					region = {"x1": selectedSquare["x1"] - actionRadius, "x2": selectedSquare["x1"] + actionRadius, "y1": selectedSquare["y1"] - actionRadius, "y2": selectedSquare["y1"] + actionRadius }
+					region = {"x1": selectedSquare["x1"] - cornerActionRadius, "x2": selectedSquare["x1"] + innerActionRadius, "y1": selectedSquare["y1"] - cornerActionRadius, "y2": selectedSquare["y1"] + innerActionRadius }
 					if( isInRegion(region, hoveredX, hoveredY) ) {
 						action = "lefttop"
 					}
 					//Right top corner
-					region = {"x1": selectedSquare["x2"] - actionRadius, "x2": selectedSquare["x2"] + actionRadius, "y1": selectedSquare["y1"] - actionRadius, "y2": selectedSquare["y1"] + actionRadius }
+					region = {"x1": selectedSquare["x2"] - innerActionRadius, "x2": selectedSquare["x2"] + cornerActionRadius, "y1": selectedSquare["y1"] - cornerActionRadius, "y2": selectedSquare["y1"] + innerActionRadius }
 					if( isInRegion(region, hoveredX, hoveredY) ) {
 						action = "righttop"
 					}
 					//Left bottom corner
-					region = {"x1": selectedSquare["x1"] - actionRadius, "x2": selectedSquare["x1"] + actionRadius, "y1": selectedSquare["y2"] - actionRadius, "y2": selectedSquare["y2"] + actionRadius }
+					region = {"x1": selectedSquare["x1"] - cornerActionRadius, "x2": selectedSquare["x1"] + innerActionRadius, "y1": selectedSquare["y2"] - innerActionRadius, "y2": selectedSquare["y2"] + cornerActionRadius }
 					if( isInRegion(region, hoveredX, hoveredY) ) {
 						action = "leftbottom"
 					}
 					//Right bottom corner
-					region = {"x1": selectedSquare["x2"] - actionRadius, "x2": selectedSquare["x2"] + actionRadius, "y1": selectedSquare["y2"] - actionRadius, "y2": selectedSquare["y2"] + actionRadius }
+					region = {"x1": selectedSquare["x2"] - innerActionRadius, "x2": selectedSquare["x2"] + cornerActionRadius, "y1": selectedSquare["y2"] - innerActionRadius, "y2": selectedSquare["y2"] + cornerActionRadius }
 					if( isInRegion(region, hoveredX, hoveredY) ) {
 						action = "rightbottom"
 					}
@@ -319,6 +319,12 @@ function enterRegionMode() {
 						selectedSquare["x1"] += delta["x1"]
 						selectedSquare["y2"] += delta["y1"]
 						break
+				}
+				if ( selectedSquare["x1"] > selectedSquare["x2"] ) {
+					selectedSquare["x2"] = selectedSquare["x1"]
+				}
+				if ( selectedSquare["y1"] > selectedSquare["y2"] ) {
+					selectedSquare["y2"] = selectedSquare["y1"]
 				}
 				//redraw region
 				onSelectionChanged()

@@ -184,12 +184,9 @@ function drawIntensityChart(x1, y1, x2, y2) {
 			var d = google.visualization.arrayToDataTable(values, true);
 
     		var options = {
-        		title: 'Intensities based on angle:',
+        		title: 'Boxplot for intensities based on measuring angle:',
         		titleTextStyle: {color: '#FFF'},
-    	    	legend: {
-    	    		textStyle: {color: '#FFF'},
-    	    		position: 'bottom'
-    	    	},
+    	    	legend: 'none',
     	    	backgroundColor: { fill: "#3e4147" },
     	    	colors: ['#e0440e'],
     	    	hAxis: {

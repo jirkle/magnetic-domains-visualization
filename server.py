@@ -141,6 +141,7 @@ def run(server_class=HTTPServer, handler_class=Server, p=port):
     httpd = server_class(server_address, handler_class)
     print('Starting httpd...')
     httpd.serve_forever()
+    print('Server is running')
 
 
 if __name__ == "__main__":
