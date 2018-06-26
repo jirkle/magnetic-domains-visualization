@@ -164,7 +164,7 @@ function drawIntensityChart(x1, y1, x2, y2) {
 		type: "POST",
 		success: function(point) {
 			$('#chart').empty()
-
+			$('#graph-info img').attr("title", "This chart shows all measured intensities for each angle in a boxplot graph")
 			values = []
 			$(point).each( function( index, p ) {
 				val = []
@@ -215,6 +215,7 @@ function drawIntensityChart(x1, y1, x2, y2) {
 
 function drawHistogram(x1, y1, x2, y2) {
 	$('#chart').empty()
+	$('#graph-info img').attr("title", "This chart shows histogram of all measured intensities within selected region")
 	values = [['Intensity']]
 	d = imageData["rows"]
 	for (var x = x1; x <= x2; x++) {

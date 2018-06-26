@@ -20,26 +20,30 @@
           <div id="loader" style="z-index: 2;">
             <div class="loader"></div>
           </div>
-
-          <canvas id="image-last" css="display: none">
-          </canvas>
         </div>
-        <div class="right col-3">
+        <div id="controls" class="right col-3">
             <h1>Magnetic domains</h1>
-            <div id="chart" style="width: 400px; height: 300px"></div>
-            <div id="buttons">
-              <button class="selection-btn" id="point-selection"><img src="img/point-selection.png" alt="Point selection"></button>
-              <button class="selection-btn" id="region-selection"><img src="img/region-selection.png" alt="Region selection"></button>
-            </div>
-            <p id="info">Selected pixel x = <span id="x"></span>, y = <span id="y"></span>.</p>
             <div>
+              <h5><strong>Choose measurement:</strong></h5>
               <p><strong>Angle:</strong></p>
               <select id="angles"></select>
               <p><strong>Measurement:</strong></p>
               <select id="measurements"></select>
             </div>
+            <div>
+              <h5><strong>Selection tools:</strong></h5>
+              <div id="buttons">
+                <button class="selection-btn" id="point-selection"><img src="img/point-selection.png" alt="Point selection" title="Point selection"></button>
+                <button class="selection-btn" id="region-selection"><img src="img/region-selection.png" alt="Region selection" title="Region selection"></button>
+              </div>
+            </div>
+            <div>
+              <div id="graph-info"><h5><strong>Selection graph:</strong></h5><img src="img/info.png"></div>
+              <div id="chart" style="width: 400px; height: 300px"></div>
+            </div>
         </div>
       </div>
+      <p id="info">Selected pixel x = <span id="x"></span>, y = <span id="y"></span>.</p>
     </div>
     
 

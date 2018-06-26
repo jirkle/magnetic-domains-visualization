@@ -3,8 +3,6 @@ body {
 	margin-top:50px;
 	font: 15px "Trebuchet MS";
 	color:#c0c0c0;
-
-	/*! width: 100%; */
 }
 
 h1 {
@@ -45,12 +43,11 @@ p {
 }
 
 .graphBox canvas {
-	width: 100%;
-		
+	height: 100%;
 }
 
-#chart {
-	margin: 10px 0px 10px 0px;
+#controls > div {
+	margin-top: 30px;
 }
 
 #buttons {
@@ -58,15 +55,24 @@ p {
 }
 
 #info {
-	margin: 10px 0px 10px 0px;
+	margin: 20px 0px 0px 30px;
 }
 
 #angles {
 	margin: 0px 0px 20px 0px;
 }
 
+#graph-info h5 {
+	float: left;
+}
+
+#graph-info img {
+	width: 20px;
+	margin-top: 3px;
+	margin-left: 20px
+}
+
 .selection-btn {
-	/* width: 50px; */
 	padding: 5px;
 }
 
@@ -76,9 +82,8 @@ p {
 
 .right {
 	float:left;
-	margin:0px 0px 0px 50px;
-	width:10%;
-
+	margin: 0px 0px 0px 60px;
+	width: 9%;
 }
 
 .status {
@@ -93,7 +98,6 @@ p {
 
 
 button {
-	 /*Reset's every elements apperance*/
 	 background: none repeat scroll 0 0 transparent;
 	 border: medium none;
 	 border-spacing: 0;
@@ -126,8 +130,8 @@ path:hover {
 }
 
 .loader {
-    border: 16px solid #f3f3f3; /* Light grey */
-    border-top: 16px solid #3498db; /* Blue */
+    border: 16px solid #f3f3f3;
+    border-top: 16px solid #3498db;
     border-radius: 50%;
     width: 120px;
     height: 120px;

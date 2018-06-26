@@ -68,9 +68,9 @@ function init() {
 		selectedPoint = { "x1": imageData["width"] / 2, "y1": imageData["height"] / 2}
 
 		//show data
-		//Enter point selection mode
-		enterPointMode()
+		//enter point selection mode
 		redrawImage()
+		$("#point-selection").click()
 	});
 
 	//Register change listeners
