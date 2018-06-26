@@ -158,47 +158,6 @@ function drawRect(x, y, width, height, color, imageContext) {
 	}
 }
 
-function drawHistogram(x1, y1, x2, y2) {
-	$('#chart').empty()
-	values = [['Intensity']]
-	d = imageData["rows"]
-	for (var x = x1; x <= x2; x++) {
-		for (var y = y1; y <= y2; y++) {
-			values.push([parseInt(d[y][x])])
-		}
-	}
-
-	var d = google.visualization.arrayToDataTable(values);
-	var options = {
-        title: 'Intensity histogram',
-        titleTextStyle: {color: '#FFF'},
-    	legend: { position: 'bottom' },
-    	backgroundColor: { fill: "#3e4147" },
-    	colors: ['#e0440e'],
-    	hAxis: {
-    		textStyle:{color: '#FFF'},
-    		gridlines: {
-        		color: "#555"
-    		},
-    		baselineColor: '#FFF'
-    	},
-    	vAxis: {
-    		textStyle:{color: '#FFF'},
-    		gridlines: {
-        		color: "#555"
-    		},
-    		baselineColor: '#FFF'
-    	},
-    	histogram: {
-    		minValue: imageData["min"],
-      		maxValue: imageData["max"]
-      	}
-    };
-
-	var chart = new google.visualization.Histogram(document.getElementById('chart'));
-    chart.draw(d, options);
-}
-
 function drawIntensityChart(x1, y1, x2, y2) {
 	$.ajax( {
 		url: "http://" + server_address + ":" + server_port + "/point?x1=" + x1 + "&y1=" + y1,
@@ -225,13 +184,17 @@ function drawIntensityChart(x1, y1, x2, y2) {
 			var d = google.visualization.arrayToDataTable(values, true);
 
     		var options = {
-        		title: 'Intensity based on angle',
+        		title: 'Intensities based on angle:',
         		titleTextStyle: {color: '#FFF'},
-    	    	legend: { position: 'bottom' },
+    	    	legend: {
+    	    		textStyle: {color: '#FFF'},
+    	    		position: 'bottom'
+    	    	},
     	    	backgroundColor: { fill: "#3e4147" },
     	    	colors: ['#e0440e'],
     	    	hAxis: {
     	    		textStyle:{color: '#FFF'},
+		    		baseline: angle,
     				gridlines: {
       		  			color: "#555"
     				},
@@ -251,6 +214,50 @@ function drawIntensityChart(x1, y1, x2, y2) {
 			chart.draw(d, options)
 		}
 	} )
+}
+
+function drawHistogram(x1, y1, x2, y2) {
+	$('#chart').empty()
+	values = [['Intensity']]
+	d = imageData["rows"]
+	for (var x = x1; x <= x2; x++) {
+		for (var y = y1; y <= y2; y++) {
+			values.push([parseInt(d[y][x])])
+		}
+	}
+
+	var d = google.visualization.arrayToDataTable(values);
+	var options = {
+        title: 'Intensities histogram:',
+        titleTextStyle: {color: '#FFF'},
+    	legend: {
+    		textStyle:{color: '#FFF'},
+    		position: 'bottom'
+    	},
+    	backgroundColor: { fill: "#3e4147" },
+    	colors: ['#e0440e'],
+    	hAxis: {
+    		textStyle:{color: '#FFF'},
+    		gridlines: {
+        		color: "#555"
+    		},
+    		baselineColor: '#FFF'
+    	},
+    	vAxis: {
+    		textStyle:{color: '#FFF'},
+    		gridlines: {
+        		color: "#555"
+    		},
+    		baselineColor: '#FFF'
+    	},
+    	histogram: {
+    		minValue: imageData["min"],
+      		maxValue: imageData["max"]
+      	}
+    };
+
+	var chart = new google.visualization.Histogram(document.getElementById('chart'));
+    chart.draw(d, options);
 }
 
 function shuffle(array) {

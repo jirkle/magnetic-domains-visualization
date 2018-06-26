@@ -79,13 +79,14 @@ function init() {
 
 	$("#measurements").change( onMeasurementChanged )
 	
+	//Buttons
 	$("#point-selection").on( "click", function(e) {
 		enterPointMode()
-	});
+	})
 
 	$("#region-selection").on( "click", function(e) {
 		enterRegionMode()
-	});
+	})
 }
 
 function onAngleChanged() {
@@ -95,7 +96,6 @@ function onAngleChanged() {
 	refreshMeasurements()
 	$("#measurements").change( onMeasurementChanged )
 	getAsyncData().done( function() {
-		redrawOverlay()
 		onSelectionChanged()
 		redrawImage()
 	})
@@ -105,13 +105,14 @@ function onMeasurementChanged() {
 	measurement = parseInt($("#measurements").val())
 	showLoader()
 	getAsyncData().done( function() {
-		redrawOverlay()
+		
 		onSelectionChanged()
 		redrawImage()
 	})
 }
 
 function onSelectionChanged() {
+	redrawOverlay()
 	if ( pointMode ) {
 		$("#info").html("Selected pixel x = " + selectedPoint["x1"] + ", y = " + selectedPoint["y1"] + ".")
 		redrawIntensityChart()
@@ -169,7 +170,9 @@ function getData() {
 function enterPointMode() {
 	if ( !pointMode ) {
 		pointMode = true
+		$(document).unbind()
 		$(overlay).unbind()
+		$("#overlay")[0].style.cursor = ""
 		$(overlay).on("click", function(e) {
 			lastX = selectedPoint["x1"]
 			lastY = selectedPoint["y1"]
@@ -186,7 +189,6 @@ function enterPointMode() {
 			appendRenderJob( {"x1": lastX - dist, "y1": lastY - dist, "x2": lastX + dist, "y2": lastY + dist, "function": redrawOverlayRect} )
 			onSelectionChanged()
 		});
-		redrawOverlay()
 		onSelectionChanged()
 	}
 }
@@ -197,7 +199,7 @@ function enterRegionMode() {
 		$(overlay).unbind()
 		$(document).mousemove(function(e) {
 			if ( !dragStarted ) {
-				if( $(event.target).is("#overlay") ) {
+				if( $(e.target).is("#overlay") ) {
 					overlay = $("#overlay")[0]
 					hoveredX = Math.round(e.offsetX/overlay.clientWidth * overlay.width)
 					hoveredY = Math.round(e.offsetY/overlay.clientHeight * overlay.height)
@@ -319,7 +321,6 @@ function enterRegionMode() {
 						break
 				}
 				//redraw region
-				redrawOverlay()
 				onSelectionChanged()
 			}
 		} )
@@ -336,11 +337,9 @@ function enterRegionMode() {
 			if(dragStarted) {
 				dragStarted = false
 
-				redrawOverlay()
 				onSelectionChanged()
 			}			
 		} )
-		redrawOverlay()
 		onSelectionChanged()
 	}
 }

@@ -1,4 +1,4 @@
-body{
+body {
 	background:#3e4147;
 	margin-top:50px;
 	font: 15px "Trebuchet MS";
@@ -7,7 +7,7 @@ body{
 	/*! width: 100%; */
 }
 
-h1{
+h1 {
 	font-size:40px;
 	margin:0px;
 	text-transform:uppercase;
@@ -15,14 +15,14 @@ h1{
 	color:#f2f2f2;
 }
 
-h2{
+h2 {
 	font-size:25px;
 	margin:0px;
 	margin-top:50px;
 	color:#f2f2f2;
 }
 
-p{
+p {
 	width:100%;
 }
 
@@ -31,88 +31,97 @@ p{
 	margin-bottom: 40pt;
 }
 
-.map{
+.map {
 	background:transparent;
 	float:left;
 	width:520px;
 	height:500px;
 }
 
-.graphBox{
+.graphBox {
 	margin-left:30px;
 	float: left;
 	max-height: 95%;
 }
 
-.graphBox canvas{
+.graphBox canvas {
 	width: 100%;
 		
 }
 
-#chart{
+#chart {
 	margin: 10px 0px 10px 0px;
 }
 
-#buttons{
+#buttons {
+	margin: 20px 0px 10px 0px;
+}
+
+#info {
 	margin: 10px 0px 10px 0px;
 }
 
-#info{
-	margin: 10px 0px 10px 0px;
-}
-
-#angles{
+#angles {
 	margin: 0px 0px 20px 0px;
 }
 
+.selection-btn {
+	/* width: 50px; */
+	padding: 5px;
+}
 
-.right{
+.selection-btn img {
+	width: 40px;
+}
+
+.right {
 	float:left;
 	margin:0px 0px 0px 50px;
 	width:10%;
 
 }
 
-.status{
+.status {
 	height:100px;
 }
 
 
 
-.date{
+.date {
 	text-align:right;
 }
 
 
-button{
+button {
 	 /*Reset's every elements apperance*/
-        background: none repeat scroll 0 0 transparent;
-        border: medium none;
-        border-spacing: 0;
-        color: #26589F;
-        font-family: 'PT Sans Narrow',sans-serif;
-        font-size: 16px;
-        font-weight: normal;
-        line-height: 1.42rem;
-        list-style: none outside none;
-        margin: 0;
-        padding: 0;
-        text-align: left;
-        text-decoration: none;
-        text-indent: 0;
-	background:silver;
-	border:#888 1px solid;
-	color:#3e4147;
-	margin:0px 5px;
-	padding:0px 5px;
-
+	 background: none repeat scroll 0 0 transparent;
+	 border: medium none;
+	 border-spacing: 0;
+	 color: #26589F;
+	 font-family: 'PT Sans Narrow',sans-serif;
+	 font-size: 16px;
+	 font-weight: normal;
+	 line-height: 1.42rem;
+	 list-style: none outside none;
+	 margin: 0;
+	 padding: 0;
+	 text-align: left;
+	 text-decoration: none;
+	 text-indent: 0;
+	 background: #c0c0c009;
+	 border: #8883 2px solid;
+	 color: #fff;
+	 margin: 0px 10px 0px 0px;
+	 padding:0px 5px;
+	 font-weight: 700;
 }
 
-button:hover{
+button:hover {
 	cursor:pointer;
+	background: #c0c0c011;
 }
 
-path:hover{
+path:hover {
 	cursor:pointer;
 }
 
